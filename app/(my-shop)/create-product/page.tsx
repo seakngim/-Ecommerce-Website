@@ -1,143 +1,449 @@
-import React from "react";
+"use client";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import style from "./style.module.css";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Dropdown } from "flowbite-react";
+import { ImageType, ProductPostType, initialValues } from "@/lip/constants ";
+import {
+  useGetImagesQuery,
+  useGetIconsQuery,
+  useUploadImageMutation,
+} from "@/redux/service/images ";
+import { useCreateProductMutation } from "@/redux/service/product ";
+import { toast } from "react-toastify";
 
-export default function MyShop() {
+const validationSchema = Yup.object().shape({
+  categoryName: Yup.string().required("Required"),
+  name: Yup.string().required("Required"),
+  desc: Yup.string().nullable(),
+  price: Yup.number().required("Required"),
+  quantity: Yup.number().required("Required"),
+});
+
+export default function Product() {
+  const router = useRouter();
+
+  //fetch data from RTK query
+
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [selectedIcon, setSelectedIcon] = useState(null);
+  const [props, setProps] = useState([]);
+  const [icons, setIcons] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  const {
+    data: data,
+    isLoading: isLoading,
+    isFetching: isFethching,
+  } = useGetImagesQuery({ page: page, pageSize: pageSize });
+
+  ///fetch icons
+
+  const {
+    data: data1,
+    isLoading: isLoading1,
+    isFetching: isFetching1,
+  } = useGetIconsQuery({ page: page, pageSize: pageSize });
+
+  const [createProduct, { data: productData, isLoading: productLoading }] =
+    useCreateProductMutation();
+
+  const [deleteProduct, { data: deleteData, isLoading: deleteLoading }] =
+    useCreateProductMutation();
+
+  const [uploadImage, { data: updateData, isLoading: updateLoading }] =
+    useUploadImageMutation();
+
+  //create product
+  const createProduct1 = async (values: ProductPostType) => {
+    try {
+      const result = await createProduct(values);
+      toast.success("Product Created Successfully");
+      return result;
+    } catch (error) {
+      console.error("Product creation failed:", error);
+
+      toast.error("Failed to create product");
+      throw error;
+    }
+  };
+
+  //delete product
+  const handleDeleteProduct = async (id: Number) => {
+    id;
+  };
+
+  useEffect(() => {
+    if (!isLoading1 && data1) {
+      setIcons(data1.results);
+    }
+  }, [data1, isLoading1]);
+
+  //handle upload image
+
+  //note
+
+  const CustomInput = ({ field, form, setFieldValue }: any) => {
+    const handleUploadeFile = (e: any) => {
+      const file = e.target.files[0];
+      const localUrl = URL.createObjectURL(file);
+      console.log(localUrl);
+      setFieldValue(field.name, file);
+    };
+  };
+
+  //note zl
+
+  const totalPages = Math.ceil(data?.total / pageSize) || 4;
+
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  useEffect(() => {
+    if (!isLoading && data) {
+      setProps(data.results);
+    }
+  }, [data, isLoading]);
+
+  const handleSelect = (
+    index: number,
+    props: any,
+    icons: any,
+    type: string
+  ) => {
+    if (type === "selectImage") {
+      setSelectedPhoto(props[index]?.image || null);
+    } else if (type === "data1Icon") {
+      setSelectedIcon(icons[index]?.image || null);
+    }
+  };
+
+  const nextPage = () => {
+    setPage(page + 1);
+  };
+
+  const prevPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const renderPageNumbers = (data: any) => {
+    const pagesToShow = [];
+    const totalPageCount = Math.ceil(data?.total / pageSize);
+    const maxPageNumberToShow = 5;
+
+    let startPage = Math.max(1, page - Math.floor(maxPageNumberToShow / 2));
+    let endPage = Math.min(totalPageCount, startPage + maxPageNumberToShow - 1);
+
+    if (endPage - startPage < maxPageNumberToShow - 1) {
+      startPage = Math.max(1, endPage - maxPageNumberToShow + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pagesToShow.push(
+        <button
+          key={i}
+          onClick={() => setPage(i)}
+          className={`px-3 py-1 mx-1 rounded-lg ${
+            i === page ? "bg-yellow-500 text-white" : "bg-gray-100"
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    return pagesToShow;
+  };
+
   return (
-    <main>
-      <section>
-        <div className="mx-auto container px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-          <div className="mx-auto">
-            <div className="flex justify-between gap-8">
-              <ul className="space-y-4 w-full">
-                <header className="border-b pb-5 flex justify-between items-end">
-                  <h1 className="text-xl font-bold text-[#2372B7] sm:text-3xl">
-                    Shoping Cart
-                  </h1>
-                  {}
-                  <p className="text-lg font-semibold">Items</p>
-                </header>
-                <li className="flex items-center gap-4">
-                  <img
-                    src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=830&q=80"
-                    alt=""
-                    className="size-32 rounded object-cover"
-                  />
+    <main className={`${style.container}`}>
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={async (values: any) => {
+          console.log(values);
+          const productPost: ProductPostType = {
+            category: {
+              name: values.categoryName,
+              icon: selectedIcon || "",
+            },
+            name: values.name,
+            desc: values.desc,
+            image: selectedPhoto || "",
+            price: values.price,
+            quantity: values.quantity,
+          };
 
-                  <div>
-                    <h3 className="text-[16px] text-gray-900">Basic Tee 6-Pack</h3>
-
-                    <dl className="mt-0.5 space-y-px text-[12px] text-gray-600">
-                      <div>
-                        <dt className="inline">Size: </dt>
-                        <dd className="inline">XXS</dd>
-                      </div>
-
-                      <div>
-                        <dt className="inline">Color: </dt>
-                        <dd className="inline ">White</dd>
-                      </div>
-                    </dl>
-                  </div>
-
-                  <div className="flex flex-1 items-center justify-end gap-2">
-                    <form>
-                      <label htmlFor="Line1Qty" className="sr-only">
-                        {" "}
-                        Quantity{" "}
-                      </label>
-
-                      <input
-                        type="number"
-                        min="1"
-                        value="1"
-                        id="Line1Qty"
-                        className="h-8 w-12 rounded border-gray-200 bg-gray-50 p-0 text-center text-xs text-gray-600 [-moz-appearance:_textfield] focus:outline-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
-                      />
-                    </form>
-
-                    <button className="text-gray-600 transition hover:text-red-600">
-                      <span className="sr-only">Remove item</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="h-5 w-5 text-red-600"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </li>
-              </ul>
-
-              <div className="flex justify-end">
-                <div className="w-screen max-w-lg px-4 space-y-4">
-
-                <h1 className="text-3xl font-bold">Order Summary</h1>
-                  <dl className="space-y-0.5 text-sm text-gray-700 border-t px-4 pt-8 leading-loose">
-                    <div className="flex justify-between">
-                      <dt>Subtotal</dt>
-                      <dd>£250</dd>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <dt>VAT</dt>
-                      <dd>£25</dd>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <dt>Discount</dt>
-                      <dd>-£20</dd>
-                    </div>
-
-                    <div className="flex justify-between !text-base font-medium">
-                      <dt>Total</dt>
-                      <dd>£200</dd>
-                    </div>
-                  </dl>
-
-                  <div className="flex justify-end">
-                    <span className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-indigo-700">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="-ms-1 me-1.5 h-4 w-4"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"
-                        />
-                      </svg>
-
-                      <p className="whitespace-nowrap text-xs">
-                        2 Discounts Applied
-                      </p>
-                    </span>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <a
-                      href="#"
-                      className="block rounded bg-gray-700 px-5 py-3 text-sm text-gray-100 transition hover:bg-gray-600"
-                    >
-                      Checkout
-                    </a>
-                  </div>
-                </div>
+          createProduct(productPost);
+        }}
+      >
+        {({ setFieldValue }: any) => (
+          <Form className=" p-4 rounded-lg w-full container mx-auto">
+            {/* Product Name */}
+            <div className="mb-4">
+              <button
+                onClick={() => router.push(`/myshop`)}
+                className="text-yellow-500"
+              >
+                Back
+              </button>
+            </div>
+            <div className={`${style.title}`}>
+              <div>
+                <button
+                  onClick={() => router.push(`/add`)}
+                  className={`${style.title}`}
+                >
+                  Create Product
+                </button>
+              </div>
+              <div>
+                <Dropdown color="yellow" label="Dropdown button">
+                  <Dropdown.Item
+                    className="text-yellow-500"
+                    onClick={() => router.push(`/uploadimage`)}
+                  >
+                    Product Image
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    className="text-yellow-500"
+                    onClick={() => router.push(`/uploadIcon`)}
+                  >
+                    Product Icon
+                  </Dropdown.Item>
+                </Dropdown>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+            <div className="mb-5">
+              <label className={`${style.label}`} htmlFor="name">
+                Product Name
+              </label>
+              <Field
+                type="text"
+                name="name"
+                id="name"
+                className={`${style.input}`}
+              />
+              <ErrorMessage
+                name="name"
+                component="div"
+                className={`${style.error}`}
+              />
+
+              {/* Product Description */}
+              <div className="mb-5">
+                <label className={`${style.label}`} htmlFor="desc">
+                  Product Description
+                </label>
+                <Field
+                  type="text"
+                  name="desc"
+                  id="desc"
+                  component="textarea"
+                  className={`${style.input}`}
+                />
+                <ErrorMessage
+                  name="desc"
+                  component="div"
+                  className={`${style.error}`}
+                />
+              </div>
+
+              {/* Product Price */}
+              <div className="mb-5">
+                <label className={`${style.label}`} htmlFor="price">
+                  Product Price
+                </label>
+                <Field
+                  type="number"
+                  name="price"
+                  id="price"
+                  className={`${style.input}`}
+                />
+                <ErrorMessage
+                  name="price"
+                  component="div"
+                  className={`${style.error}`}
+                />
+              </div>
+
+              {/* Product Quantity */}
+              <div className="mb-5">
+                <label className={`${style.label}`} htmlFor="price">
+                  Product Quantity
+                </label>
+                <Field
+                  type="number"
+                  name="quantity"
+                  id="quantity"
+                  className={`${style.input}`}
+                />
+                <ErrorMessage
+                  name="quantity"
+                  component="div"
+                  className={`${style.error}`}
+                />
+              </div>
+
+              {/* Product Category */}
+              <div className="mb-5">
+                <label className={`${style.label}`} htmlFor="categoryName">
+                  Product Category Name
+                </label>
+                <Field
+                  type="text"
+                  name="categoryName"
+                  id="categoryName"
+                  className={`${style.input}`}
+                />
+                <ErrorMessage
+                  name="categoryName"
+                  component="div"
+                  className={`${style.error}`}
+                />
+              </div>
+            </div>
+
+            <details
+              className="group [&_summary::-webkit-details-marker]:hidden mx-auto"
+              open
+            >
+              <summary className="flex  mx-auto cursor-pointer items-center justify-between gap-1.5 rounded-lg bg-gray-50 p-4 text-gray-900">
+                <h2 className="font-medium">Select Images</h2>
+
+                <svg
+                  className="size-5 shrink-0 transition duration-300 group-open:-rotate-180"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </summary>
+              {props.map((image: ImageType, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between gap-4 p-4 bg-gray-50"
+                >
+                  <img
+                    src={image.image}
+                    alt={image.name}
+                    className="w-20 h-20 object-cover rounded-lg"
+                    onClick={() =>
+                      handleSelect(index, props, data1, "selectImage")
+                    }
+                  />
+                  <h3 className="text-gray-900">{image.name}</h3>
+                </div>
+              ))}
+
+              <div className="flex justify-center p-4">
+                <button
+                  onClick={prevPage}
+                  disabled={page === 1}
+                  className="px-4 py-2 mx-1 rounded-lg"
+                >
+                  Previous
+                </button>
+                {renderPageNumbers(data)}
+                <button
+                  onClick={nextPage}
+                  disabled={isLoading || isFethching}
+                  className="px-4 py-2 mx-1 rounded-lg"
+                >
+                  Next
+                </button>
+              </div>
+            </details>
+            {selectedPhoto && <img src={selectedPhoto} alt="" />}
+            <div className="mt-4"></div>
+            <details
+              className="group [&_summary::-webkit-details-marker]:hidden mx-auto"
+              open
+            >
+              <summary className="flex  mx-auto cursor-pointer items-center justify-between gap-1.5 rounded-lg bg-gray-50 p-4 text-gray-900">
+                <h2 className="font-medium">Select Icons</h2>
+
+                <svg
+                  className="size-5 shrink-0 transition duration-300 group-open:-rotate-180"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </summary>
+              {icons.map((image: ImageType, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between gap-4 p-4 bg-gray-50"
+                >
+                  <img
+                    src={image.image}
+                    alt={image.name}
+                    className="w-20 h-20 object-cover rounded-lg"
+                    onClick={() =>
+                      handleSelect(index, props, icons, "data1Icon")
+                    }
+                  />
+                  <h3 className="text-gray-900">{image.name}</h3>
+                </div>
+              ))}
+              <div className="flex justify-center p-4">
+                <button
+                  onClick={prevPage}
+                  disabled={page === 1}
+                  className="px-4 py-2 mx-1 rounded-lg"
+                >
+                  Previous
+                </button>
+                {renderPageNumbers(data1)}
+                <button
+                  onClick={nextPage}
+                  disabled={isLoading1 || isFetching1}
+                  className="px-4 py-2 mx-1 rounded-lg"
+                >
+                  Next
+                </button>
+              </div>
+            </details>
+            {selectedIcon && <img src={selectedIcon} alt="" />}
+
+            <div className="mt-4">
+              {/* button submit */}
+              <button
+                type="submit"
+                className="bg-yellow-500 py-2 px-3 text-white rounded-lg"
+              >
+                Submit
+              </button>
+              <button
+                onClick={() => router.push(`/myshop`)}
+                type="submit"
+                className="bg-red-600 text-white px-3 py-2 ml-2 rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
+          </Form>
+        )}
+      </Formik>
     </main>
   );
 }
