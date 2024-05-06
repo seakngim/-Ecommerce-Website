@@ -1,10 +1,30 @@
+"use client";
 import ButtonComponent from "@/components/ButtonComponent ";
 import CardComponent from "@/components/CardComponent ";
 import CardProductComponent from "@/components/CardProductComponent ";
 import PaginationComponent from "@/components/PaginationComponent ";
-import Image from "next/image";
+import { BASE_URL } from "@/lip/constants ";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Marquee from "react-fast-marquee";
 
 export default function Home() {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    // fetch categories
+    fetch(`${BASE_URL}/api/file/category`)
+      .then((res) => res.json())
+      .then((data) => setCategories(data.results));
+
+    // fetch products
+    fetch(`${BASE_URL}/api/products`)
+      .then((res) => res.json())
+      .then((data) => setProducts(data.results));
+  }, []);
+
   return (
     <main className="container mx-auto">
       {/* heading */}
@@ -50,24 +70,47 @@ export default function Home() {
       </section>
 
       {/* Categories */}
-      <section className="text-center py-10">
-        <h2 className="text-xl font-bold text-gray-900 sm:text-3xl uppercase">
+      <section className="text-center py-10 px-4 sm:px-6 lg:px-8">
+        <h2 className="text-xl font-bold text-[#2372B7] sm:text-3xl uppercase">
           Our Categories
         </h2>
-        <div className="flex justify-center mt-10 gap-2">
-          <p className="text-gray-500 border border-[#2372B7] py-2 hover:shadow-lg px-5">
-            Category1
-          </p>
-        </div>
+          <Marquee
+            gradient
+            pauseOnHover={false} // Changed from true to false
+            className="overflow-hidden"
+          >
+            <div className="flex justify-center mt-10 gap-2 pl-2">
+              {categories.map((category: any, index: number) => (
+                <div
+                  key={index}
+                  className="text-gray-500 border border-[#2372B7] hover:shadow-xl"
+                >
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="h-20 w-40 object-cover transition duration-500 group-hover:scale-105 "
+                  />
+                </div>
+              ))}
+            </div>
+          </Marquee>
       </section>
 
       {/* Popular Product */}
-      <section className="text-center py-10 flex flex-col items-center">
-        <h2 className="text-xl font-bold text-gray-900 sm:text-3xl uppercase pb-4">
+      <section className="text-center py-10 flex flex-col items-center ">
+        <h2 className="text-xl font-bold text-[#2372B7] sm:text-3xl uppercase pb-4">
           Popular Products
         </h2>
         <div className="flex flex-wrap justify-center mt-4 mb-8 gap-4">
-          <CardProductComponent />
+          {products.map((products: any, index: number) => (
+            <CardProductComponent
+            onClick={() => router.push(`/${products.id}`)}
+              key={index}
+              title={products.name}
+              price={products.price}
+              image={products.image}
+            />
+          ))}
         </div>
         <PaginationComponent />
       </section>

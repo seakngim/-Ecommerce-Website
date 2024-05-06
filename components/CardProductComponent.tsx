@@ -1,6 +1,18 @@
 import React from "react";
 
-export default function CardProductComponent() {
+type PropType = {
+  title: string;
+  image: string;
+  price: number;
+  onClick: () => void;
+};
+
+export default function CardProductComponent({
+  title,
+  image,
+  price,
+  onClick,
+}: PropType) {
   return (
     <a
       href="#"
@@ -11,9 +23,9 @@ export default function CardProductComponent() {
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
-          strokeWidth={1.5}
+          strokeWidth={2.5}
           stroke="currentColor"
-          className="h-4 w-4"
+          className="h-4 w-4 text-[#2372B7]"
         >
           <path
             strokeLinecap="round"
@@ -22,16 +34,18 @@ export default function CardProductComponent() {
           />
         </svg>
       </button>
-
-      <img
-        src="https://images.unsplash.com/photo-1599481238640-4c1288750d7a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2664&q=80"
-        alt=""
-        className="h-64 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-72"
-      />
+      <div className="border-t border-x hover:border-t hover:border-x border-gray-100 rounded-t-lg">
+        <img
+         onClick={onClick}
+          src={image}
+          alt={title}
+          className="h-64 w-96 object-cover transition duration-500 group-hover:scale-105 sm:h-72"
+        />
+      </div>
 
       <div className="relative border border-gray-100 bg-white p-6 rounded-b-lg">
-        <h3 className="text-lg font-medium text-gray-900">Robot Toy</h3>
-        <p className="mt-1.5 text-sm text-gray-700">$14.99</p>
+        <h3 className="text-lg font-medium uppercase text-gray-900">{title}</h3>
+        <p className="mt-1.5 text-sm text-gray-700">${price}</p>
       </div>
     </a>
   );

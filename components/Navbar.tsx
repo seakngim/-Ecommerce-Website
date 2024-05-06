@@ -1,4 +1,7 @@
+import { Badge } from "@nextui-org/badge";
 import ButtonComponent from "./ButtonComponent";
+import { Button } from "@nextui-org/button";
+import NotificationIcon from "./icons/NotificationIcon";
 
 export function NavbarComponent() {
   return (
@@ -45,7 +48,7 @@ export function NavbarComponent() {
               <li>
                 <a
                   className="text-gray-500 transition hover:text-gray-500/75"
-                  href="my-shop"
+                  href="/create-product"
                 >
                   My Shop
                 </a>
@@ -55,13 +58,20 @@ export function NavbarComponent() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex md:order-2 items-center ">
-            <img
-              src="/logo-ecommerce.png"
-              className="mr-3 h-6 sm:h-9"
-              alt="Ecommerce Logo"
-            />
-            <ButtonComponent name="Login" />
+          <div className="flex md:order-2 items-center gap-6">
+            <Badge content="9+" shape="circle" color="danger">
+              <Button
+                radius="full"
+                isIconOnly
+                aria-label="more than 99 notifications"
+                variant="light"
+              >
+                <NotificationIcon height={5} width={10} size={24} />
+              </Button>
+            </Badge>
+            <a href="/login">
+              <ButtonComponent name="Login" />
+            </a>
           </div>
           <div className="block md:hidden">
             <button className="rounded bg-gray-100 p-2 text-gray-600 transition hover:text-gray-600/75">

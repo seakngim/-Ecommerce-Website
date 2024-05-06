@@ -1,5 +1,5 @@
 import { FooterComponent } from "@/components/Footer ";
-import "./globals.css";
+import "../globals.css";
 import { NavbarComponent } from "@/components/Navbar ";
 
 export default function RootLayout({
