@@ -16,7 +16,7 @@ export default function CardProductComponent({
   return (
     <a
       href="#"
-      className="group relative max-w-sm block overflow-hidden rounded-t-lg"
+      className="group relative w-72 block overflow-hidden rounded-t-lg"
     >
       <button className="absolute end-4 top-4 z-10 rounded-full bg-white px-4 py-1.5 text-gray-900 transition hover:text-gray-900/75">
         <svg
@@ -44,7 +44,7 @@ export default function CardProductComponent({
       </div>
 
       <div className="relative border border-gray-100 bg-white p-6 rounded-b-lg">
-        <h3 className="text-lg font-medium uppercase text-gray-900">{title}</h3>
+        <h3 className="text-lg font-medium uppercase text-gray-900 line-clamp-1">{title}</h3>
         <p className="mt-1.5 text-sm text-gray-700">${price}</p>
       </div>
     </a>

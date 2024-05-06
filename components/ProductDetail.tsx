@@ -1,3 +1,5 @@
+import { decrement, increment } from "@/redux/feature/action/counterSlice ";
+import { useAppDispatch, useAppSelector } from "@/redux/hook ";
 import React from "react";
 type PropType = {
   title: string;
@@ -20,6 +22,9 @@ export default function ProductDetail({
   price,
   onClick,
 }: PropType) {
+  const dispatch = useAppDispatch();
+  const counter = useAppSelector((state) => state.counter.value);
+
   return (
     <section className="overflow-hidden rounded-lg shadow-2xl md:grid md:grid-cols-3">
       <img
@@ -43,9 +48,15 @@ export default function ProductDetail({
           <p className="mt-2 block text-sm">
             Category: <span>{category}</span>
           </p>
-          <p className="mt-2 block text-sm">
-            Quanutity: <span>{quantity}</span>
+          {/* <p className="mt-2 block text-sm">
+            In stock: <span>{quantity}</span>
           </p>
+          <p className="mt-2 block text-sm">
+            Quantity:
+            <button onClick={() => dispatch(decrement())}>-</button>
+            <p>{counter}</p>
+            <button onClick={() => dispatch(increment())}>+</button>
+          </p> */}
           <p className="mt-2 block text-sm">{desc}</p>
         </h2>
 

@@ -2,16 +2,33 @@
 import ButtonComponent from "@/components/ButtonComponent ";
 import CardComponent from "@/components/CardComponent ";
 import CardProductComponent from "@/components/CardProductComponent ";
-import PaginationComponent from "@/components/PaginationComponent ";
+import {Pagination} from "@nextui-org/react";
 import { BASE_URL } from "@/lip/constants ";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Marquee from "react-fast-marquee";
 
 export default function Home() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPage] = useState(1);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const router = useRouter();
+
+  const onPageChange = (page: number) => setCurrentPage(page);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch(
+        `${BASE_URL}/api/products/?page=${currentPage}&page_size=10`
+      );
+      const data = await response.json();
+      setProducts(data.results);
+      const totalPage = Math.ceil(data.total / 10);
+      setTotalPage(totalPage); 
+    };
+    fetchData();
+  }, [currentPage]);
 
   useEffect(() => {
     // fetch categories
@@ -52,9 +69,9 @@ export default function Home() {
             />
           </div>
           <div className="lg:col-span-3 lg:col-start-3 lg:row-span-1 lg:row-start-2 p-5">
-            <h2 className="text-xl font-bold text-gray-900 sm:text-3xl uppercase">
+            <h1 className="text-xl font-bold text-[#2372B7] sm:text-3xl uppercase">
               Product Collection
-            </h2>
+            </h1>
 
             <p className="mt-4 py-4 text-gray-500 ">
               Lorem ipsum, dolor sit amet consectetur adipisicing elit. Itaque
@@ -71,40 +88,40 @@ export default function Home() {
 
       {/* Categories */}
       <section className="text-center py-10 px-4 sm:px-6 lg:px-8">
-        <h2 className="text-xl font-bold text-[#2372B7] sm:text-3xl uppercase">
+        <h1 className="text-xl font-bold text-[#2372B7] sm:text-3xl uppercase">
           Our Categories
-        </h2>
-          <Marquee
-            gradient
-            pauseOnHover={false} // Changed from true to false
-            className="overflow-hidden"
-          >
-            <div className="flex justify-center mt-10 gap-2 pl-2">
-              {categories.map((category: any, index: number) => (
-                <div
-                  key={index}
-                  className="text-gray-500 border border-[#2372B7] hover:shadow-xl"
-                >
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="h-20 w-40 object-cover transition duration-500 group-hover:scale-105 "
-                  />
-                </div>
-              ))}
-            </div>
-          </Marquee>
+        </h1>
+        <Marquee
+          gradient
+          pauseOnHover={false} // Changed from true to false
+          className="overflow-hidden"
+        >
+          <div className="flex justify-center mt-10 gap-2 pl-2">
+            {categories.map((category: any, index: number) => (
+              <div
+                key={index}
+                className="text-gray-500 border border-[#2372B7] hover:shadow-xl"
+              >
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="h-20 w-40 object-cover transition duration-500 group-hover:scale-105 "
+                />
+              </div>
+            ))}
+          </div>
+        </Marquee>
       </section>
 
       {/* Popular Product */}
       <section className="text-center py-10 flex flex-col items-center ">
-        <h2 className="text-xl font-bold text-[#2372B7] sm:text-3xl uppercase pb-4">
+        <h1 className="text-xl font-bold text-[#2372B7] sm:text-3xl uppercase pb-4">
           Popular Products
-        </h2>
+        </h1>
         <div className="flex flex-wrap justify-center mt-4 mb-8 gap-4">
           {products.map((products: any, index: number) => (
             <CardProductComponent
-            onClick={() => router.push(`/${products.id}`)}
+              onClick={() => router.push(`/${products.id}`)}
               key={index}
               title={products.name}
               price={products.price}
@@ -112,7 +129,7 @@ export default function Home() {
             />
           ))}
         </div>
-        <PaginationComponent />
+        <Pagination isCompact showControls total={totalPages} initialPage={currentPage} onChange={onPageChange} />
       </section>
     </main>
   );
